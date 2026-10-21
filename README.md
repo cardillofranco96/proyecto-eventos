@@ -50,7 +50,6 @@ La API queda disponible en `http://localhost:8080` por defecto. Se puede cambiar
 
 ```text
 proyecto-eventos/
-├── .env
 ├── .env.example
 ├── .gitignore
 ├── package.json
@@ -59,20 +58,26 @@ proyecto-eventos/
     ├── app.js
     ├── server.js
     ├── config/
+    │   └── .gitkeep
     ├── controllers/
     │   ├── events.controller.js
     │   └── sessions.controller.js
     ├── dao/
+    │   └── .gitkeep
     ├── middlewares/
+    │   └── .gitkeep
     ├── models/
     │   ├── Event.js
     │   └── User.js
     ├── repositories/
+    │   └── .gitkeep
     ├── routes/
     │   ├── events.router.js
     │   └── sessions.router.js
     ├── services/
+    │   └── .gitkeep
     └── utils/
+        └── .gitkeep
 ```
 
 ## Endpoints disponibles
