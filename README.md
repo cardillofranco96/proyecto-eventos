@@ -7,6 +7,8 @@ API backend inicial para administrar eventos y sus inscripciones. Esta base corr
 - Node.js con módulos ES (ESM)
 - Express
 - dotenv
+- Mongoose
+- bcryptjs
 
 ## Instalación
 
@@ -44,7 +46,7 @@ Modo normal:
 npm start
 ```
 
-La API queda disponible en `http://localhost:8080` por defecto. Se puede cambiar el puerto definiendo `PORT` en `.env`.
+La API queda disponible en `http://localhost:8080` por defecto. Se puede cambiar el puerto definiendo `PORT` en `.env`. El servidor espera una conexión activa con MongoDB usando `MONGO_URL` antes de comenzar a escuchar.
 
 ## Estructura
 
@@ -52,32 +54,35 @@ La API queda disponible en `http://localhost:8080` por defecto. Se puede cambiar
 proyecto-eventos/
 ├── .env.example
 ├── .gitignore
+├── package-lock.json
 ├── package.json
 ├── README.md
-└── src/
-    ├── app.js
-    ├── server.js
-    ├── config/
-    │   └── .gitkeep
-    ├── controllers/
-    │   ├── events.controller.js
-    │   └── sessions.controller.js
-    ├── dao/
-    │   └── .gitkeep
-    ├── middlewares/
-    │   └── .gitkeep
-    ├── models/
-    │   ├── Event.js
-    │   └── User.js
-    ├── repositories/
-    │   └── .gitkeep
-    ├── routes/
-    │   ├── events.router.js
-    │   └── sessions.router.js
-    ├── services/
-    │   └── .gitkeep
-    └── utils/
-        └── .gitkeep
+├── src/
+│   ├── app.js
+│   ├── server.js
+│   ├── config/
+│   │   └── database.js
+│   ├── controllers/
+│   │   ├── events.controller.js
+│   │   └── sessions.controller.js
+│   ├── dao/
+│   │   └── users.dao.js
+│   ├── middlewares/
+│   │   └── .gitkeep
+│   ├── models/
+│   │   ├── Event.js
+│   │   └── User.js
+│   ├── repositories/
+│   │   └── users.repository.js
+│   ├── routes/
+│   │   ├── events.router.js
+│   │   └── sessions.router.js
+│   ├── services/
+│   │   └── sessions.service.js
+│   └── utils/
+│       └── hash.js
+└── test/
+    └── sessions.service.test.js
 ```
 
 ## Endpoints disponibles
@@ -87,5 +92,45 @@ proyecto-eventos/
 | `GET` | `/api/health` | `200` con estado `ok` y mensaje `Servidor activo` |
 | `GET` | `/api/events` | `200` con estado `success` y `payload` vacío |
 | `GET` | `/api/sessions` | `200` con estado `success` y mensaje `Ruta de sessions inicializada` |
+| `POST` | `/api/sessions/register` | `201` con los datos públicos del usuario registrado |
 
-Los modelos `User` y `Event` son estructuras iniciales. La persistencia, autenticación e inscripciones todavía no están implementadas.
+### Registro de usuarios
+
+Con MongoDB en ejecución y el servidor iniciado con `npm run dev`, envía un `POST` a `http://localhost:8080/api/sessions/register` con `Content-Type: application/json`:
+
+```bash
+curl -X POST http://localhost:8080/api/sessions/register \
+    -H "Content-Type: application/json" \
+    -d '{"first_name":"Ana","last_name":"Pérez","email":"ana@example.com","password":"clave-segura-123"}'
+```
+
+El cuerpo JSON debe incluir `first_name`, `last_name`, `email` y `password`:
+
+```json
+{
+    "first_name": "Ana",
+    "last_name": "Pérez",
+    "email": "ana@example.com",
+    "password": "clave-segura-123",
+    "role": "admin"
+}
+```
+
+Los cuatro campos indicados son obligatorios. El email se normaliza a minúsculas y se eliminan sus espacios externos; la contraseña debe tener al menos 6 caracteres y se almacena como hash bcrypt con 10 rondas. El rol siempre se asigna como `user`, por lo que cualquier `role` enviado se ignora.
+
+Respuesta de éxito (`201`):
+
+```json
+{
+    "status": "success",
+    "payload": {
+        "id": "...",
+        "first_name": "Ana",
+        "last_name": "Pérez",
+        "email": "ana@example.com",
+        "role": "user"
+    }
+}
+```
+
+El campo `password` nunca se incluye en la respuesta. Datos inválidos o campos faltantes devuelven `400` (`{"status":"error","message":"Faltan campos obligatorios"}` para campos faltantes); un email registrado devuelve `409` (`{"status":"error","message":"El email ya está registrado"}`). Los errores inesperados devuelven `500`.

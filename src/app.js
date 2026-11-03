@@ -14,4 +14,15 @@ app.get('/api/health', (req, res) => {
 app.use('/api/events', eventsRouter);
 app.use('/api/sessions', sessionsRouter);
 
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'El cuerpo de la solicitud debe ser JSON válido'
+    });
+  }
+
+  return next(error);
+});
+
 export default app;
