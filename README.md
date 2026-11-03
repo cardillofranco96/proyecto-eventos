@@ -25,6 +25,7 @@ API backend inicial para administrar eventos y sus inscripciones. Esta base corr
 
 | Variable | Valor inicial | Descripción |
 | --- | --- | --- |
+Las variables se cargan y centralizan en `src/config/config.js`; el servidor y la conexión a MongoDB consumen esa configuración compartida.
 | `PORT` | `8080` | Puerto HTTP de la aplicación |
 | `NODE_ENV` | `development` | Entorno de ejecución |
 | `MONGO_URL` | `mongodb://localhost:27017/eventos` | URL prevista para la conexión a MongoDB |
@@ -41,6 +42,12 @@ npm run dev
 ```
 
 Modo normal:
+
+Ejecuta las pruebas unitarias y smoke tests con:
+
+```bash
+npm test
+```
 
 ```bash
 npm start

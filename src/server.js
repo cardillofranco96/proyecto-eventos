@@ -1,13 +1,11 @@
-import 'dotenv/config';
 import app from './app.js';
+import config from './config/config.js';
 import { connectDatabase } from './config/database.js';
-
-const port = process.env.PORT || 8080;
 
 try {
   await connectDatabase();
-  app.listen(port, () => {
-    console.log(`Servidor escuchando en el puerto ${port}`);
+  app.listen(config.PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${config.PORT}`);
   });
 } catch (error) {
   console.error('No se pudo conectar a MongoDB:', error.message);
