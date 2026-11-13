@@ -4,6 +4,9 @@ const usersRepository = {
   getByEmail(email) {
     return usersDao.getByEmail(email);
   },
+  getByEmailForAuth(email) {
+    return usersDao.getByEmailForAuth(email);
+  },
   save(userData) {
     return usersDao.save(userData);
   }

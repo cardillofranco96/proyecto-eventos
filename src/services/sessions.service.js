@@ -1,5 +1,6 @@
 import usersRepository from '../repositories/users.repository.js';
-import { createHash } from '../utils/hash.js';
+import { createHash, isValidPassword } from '../utils/hash.js';
+import { generateToken } from '../utils/jwt.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -79,4 +80,47 @@ export async function registerUser(data, repository = usersRepository) {
     }
     throw error;
   }
+}
+
+export class LoginError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.name = 'LoginError';
+    this.statusCode = statusCode;
+  }
+}
+
+export async function loginUser(data, repository = usersRepository) {
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    Array.isArray(data) ||
+    typeof data.email !== 'string' ||
+    !data.email.trim() ||
+    typeof data.password !== 'string' ||
+    !data.password
+  ) {
+    throw new LoginError('Email y contraseña son obligatorios', 400);
+  }
+
+  const user = await repository.getByEmailForAuth(
+    data.email.trim().toLowerCase()
+  );
+  const validPassword = user && typeof user.password === 'string'
+    ? await isValidPassword(data.password, user.password)
+    : false;
+
+  if (!validPassword) {
+    throw new LoginError('Credenciales inválidas', 401);
+  }
+
+  const userData = typeof user.toObject === 'function' ? user.toObject() : user;
+  const id = String(userData.id ?? userData._id);
+  const token = generateToken({
+    id,
+    email: userData.email,
+    role: userData.role
+  });
+
+  return { token };
 }
